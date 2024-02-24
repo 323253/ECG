@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
@@ -85,9 +87,10 @@ def L_filter_array(ecg_signals,cutoff_frequency, sampling_rate):
     for ecg_signal in ecg_signals:
         filtered_ecg.append(signal.filtfilt(b, a, ecg_signal))
 
-    plt.figure(figsize=(12, 6))
-    plt.plot(filtered_ecg[0])
-    plt.show()
+    # plt.figure(figsize=(12, 6))
+    # plt.plot(filtered_ecg[0])
+    # plt.title(f'One-Heart-Beat-LowFilter {cutoff_frequency}HZ')
+    # plt.show()
     return filtered_ecg
 def M_filter_array(ecg_signals,L_rate, H_rate,sampling_rate):
     # 设计一个带通Butterworth滤波器
@@ -150,15 +153,17 @@ def QRS_detect(ecg_data,sampling_rate):
     #             # 判断斜率方向是否相反
     #             if slope_left<0 and slope_right<0:
     #                 qrs_indices.append(qrs_index)
+#有效绘图开始
+    # plt.figure(figsize=(12, 6))
+    # plt.plot(t[:len(ecg_data)], ecg_data, label='Original ECG')
+    # plt.scatter(t[qrs_indices], ecg_data[qrs_indices], c='red', label='Detected QRS Peaks')
+    # plt.axhline(y=threshold, color='gray', linestyle='--', label=f'{threshold_percentile}th Percentile Threshold')
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('Amplitude')
+    # plt.legend()
+    # plt.show()
+    #有效绘图结束
 
-    plt.figure(figsize=(12, 6))
-    plt.plot(t[:len(ecg_data)], ecg_data, label='Original ECG')
-    plt.scatter(t[qrs_indices], ecg_data[qrs_indices], c='red', label='Detected QRS Peaks')
-    plt.axhline(y=threshold, color='gray', linestyle='--', label=f'{threshold_percentile}th Percentile Threshold')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Amplitude')
-    plt.legend()
-    plt.show()
     # 提取一个周期的心电信号
     # if len(qrs_indices) >= 2:
     #     # # 计算心拍周期
@@ -195,9 +200,9 @@ def QRS_detect(ecg_data,sampling_rate):
 
         # 将心跳周期添加到列表中
         heart_onces.append(heartbeat)
-    plt.figure(figsize=(12, 6))
-    plt.plot(heart_onces[0])
-    plt.show()
+    # plt.figure(figsize=(12, 6))
+    # plt.plot(heart_onces[0])
+    # plt.show()
 
 def QRS_detect_Blutty(ecg_signal, tp):
     threshold_percent=tp
@@ -238,11 +243,11 @@ def QRS_detect_Blutty(ecg_signal, tp):
     ecg_segments = [ecg_signal[int(Median_Value[i]):int(Median_Value[i + 1])]
                     for i in range(len(Median_Value) - 1)]
     ecg_segments.append(ecg_signal[int(Median_Value[-1] ):])
-    plt.plot(ecg_segments[0])
-    plt.title("One-Heart-Data")
-    plt.xlabel("Sample")
-    plt.ylabel("Amplitude")
-    plt.show()
+    # plt.plot(ecg_segments[0])
+    # plt.title("One-Heart-Data")
+    # plt.xlabel("Sample")
+    # plt.ylabel("Amplitude")
+    # plt.show()
     return ecg_segments
 
 def normalize_ecg(ecg_data):
@@ -259,9 +264,9 @@ def normalize_ecg(ecg_data):
         m=(ecg_data0 - min_val) / (max_val - min_val)
         m=m.tolist()
         nomal_Data.append(m)
-    plt.plot(nomal_Data[0])
-    plt.title("ECG-nomaliaze-Data")
-    plt.show()
+    # plt.plot(nomal_Data[0])
+    # plt.title("ECG-nomaliaze-Data")
+    # plt.show()
 
     return nomal_Data
 def Cut_ST(heartbeats):
@@ -302,28 +307,28 @@ def Cut_ST(heartbeats):
             After_Cut_Point.append(Tmp_list)
             After_Cut.append(st_segment)
 
-    # 可以打印或进一步处理裁切后的ST段的列表 st_segments
-    # 绘制心电图
-    t=np.arange(0,1000,1)
-    heartbeats[0]
-    plt.plot(t[:len(heartbeats[0])], heartbeats[0], label='Once-Heart-Beat-Data')
-
-    # 在心电图中标记已知的两点
-    plt.scatter([After_Cut_Point[0][0], After_Cut_Point[0][1]],
-                [heartbeats[0][After_Cut_Point[0][0]], heartbeats[0][After_Cut_Point[0][1]]], color='red')
-
-    # 在两点位置画竖线
-    plt.axvline(After_Cut_Point[0][0], color='green', linestyle='--', label='J')
-    plt.axvline(After_Cut_Point[0][1], color='blue', linestyle='--', label='ST-End')
-    # 设置图例
-    plt.legend()
-
-    # 显示图形
-    plt.show()
-    #print("裁切后的ST段列表:", After_Cut)
-    plt.plot(After_Cut[0])
-    plt.title("ECG-After_Cut-ST-Data")
-    plt.show()
+    # # 可以打印或进一步处理裁切后的ST段的列表 st_segments
+    # # 绘制心电图
+    # t=np.arange(0,1000,1)
+    # heartbeats[0]
+    # plt.plot(t[:len(heartbeats[0])], heartbeats[0], label='Once-Heart-Beat-Data')
+    #
+    # # 在心电图中标记已知的两点
+    # plt.scatter([After_Cut_Point[0][0], After_Cut_Point[0][1]],
+    #             [heartbeats[0][After_Cut_Point[0][0]], heartbeats[0][After_Cut_Point[0][1]]], color='red')
+    #
+    # # 在两点位置画竖线
+    # plt.axvline(After_Cut_Point[0][0], color='green', linestyle='--', label='J')
+    # plt.axvline(After_Cut_Point[0][1], color='blue', linestyle='--', label='ST-End')
+    # # 设置图例
+    # plt.legend()
+    #
+    # # 显示图形
+    # plt.show()
+    # #print("裁切后的ST段列表:", After_Cut)
+    # plt.plot(After_Cut[0])
+    # plt.title("ECG-After_Cut-ST-Data")
+    # plt.show()
 
     return After_Cut
 
@@ -356,6 +361,31 @@ def detect_st_segment(ecg_signal, sampling_rate):
     st_segment_indices = np.where(derivative > threshold)[0]
 
     return st_segment_indices
+def Judge_cust(ecg_signals):
+    new_ecg_signal=[]
+    start_index=math.ceil(len(ecg_signals)/3)
+    end_index=2*math.ceil(len(ecg_signals)/3)
+    cust_signal=ecg_signals[start_index:end_index]
+    cust_sign=max(cust_signal)
+    former_signal=ecg_signals[:start_index]
+    former_sign=max(former_signal)
+    behind_signal=ecg_signals[end_index:]
+    behind_sign=max(behind_signal)
+    if former_sign>cust_sign*1.3 and behind_sign>cust_sign*1.3:
+        new_ecg_signal=cust_signal
+        print("有去除")
+    elif former_sign>cust_sign*1.3:
+        new_ecg_signal=ecg_signals[start_index:]
+        print("有去除")
+    else:
+        new_ecg_signal=ecg_signals[:end_index]
+        print("完整")
+
+
+    return new_ecg_signal
+
+
+
 def getData_l(folder_path):
     # 获取文件夹中所有文件
     files = os.listdir(folder_path)
@@ -368,16 +398,16 @@ def getData_l(folder_path):
             mat_data = scipy.io.loadmat(file_path)
             # 查看.mat文件中的变量信息
             mat_variables = scipy.io.whosmat(file_path)
-            print(mat_variables)
+            # print(mat_variables)
             # .mat文件中有一个名为 "filtered_ecg" 的变量，获取其中的第一行数据
             first_row_data = mat_data['filtered_ecg'][0, :]
-            print(1)##
-        print(first_row_data)
-        plt.plot(first_row_data)
-        plt.title("ECG Data")
-        plt.xlabel("Sample")
-        plt.ylabel("Amplitude")
-        plt.show()
+        #     print(1)##
+        # print(first_row_data)
+        # plt.plot(first_row_data)
+        # plt.title("ECG Data")
+        # plt.xlabel("Sample")
+        # plt.ylabel("Amplitude")
+        # plt.show()
         return first_row_data
 def getData(folder_path):
     # 获取文件夹中所有文件
@@ -409,10 +439,17 @@ def getData(folder_path):
 folder_path_l = r"D:\毕设数据\MyLowData"
 folder_path=r"D:\毕设数据\数据\Train"
 #getData(folder_path)
+#获取数据
 getData_l=getData_l(folder_path_l)
-QRS_detect=QRS_detect_Blutty(getData_l,98)
+#判断是否只攫取中间1/3处心电图
+Judge_cust=Judge_cust(getData_l)
+#划分QRS波群
+QRS_detect=QRS_detect_Blutty(Judge_cust,98)
+#删去长度异常的QRS波群
 Delete_abnomal_Beat=Delete_abnomal_Beat(QRS_detect)
+#归一化处理
 normalize_ecg=normalize_ecg(Delete_abnomal_Beat)
+#低通滤波
 L_filter_array=L_filter_array(normalize_ecg,20,500)
 #M_filter_array=M_filter_array(normalize_ecg,8,16,500)
 Cut_ST=Cut_ST(L_filter_array)
