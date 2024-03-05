@@ -17,28 +17,18 @@ def butter_lowpass_filter(data, fs, fc, order):
     b, a = butter(order, Wn, 'low')
     filtered_data = filtfilt(b, a, data)
     return filtered_data
-# 获取原始文件列表
 file_list = sorted([f for f in os.listdir(original_folder_path) if f.endswith('.mat')], key=lambda x: int(os.path.splitext(x)[0]))
 
-# 循环处理前60个文件
 num_files_to_process = min(60, len(file_list))
 
 for i in range(num_files_to_process):
     # 生成原始文件的完整路径
     original_file_path = os.path.join(original_folder_path, file_list[i])
-
-    # 读取.mat文件
     mat_data = scipy.io.loadmat(original_file_path)
-
-    # 获取心电数据
     ecg_data = mat_data['ecg']
 
-    # 循环处理每一行数据
     for j in range(ecg_data.shape[0]):
-        # 对每一行进行低通滤波
         filtered_data = butter_lowpass_filter(ecg_data[j, :], fs, fc, order)
-
-        # 将滤波后的数据存回原始数据
         ecg_data[j, :] = filtered_data
 
     # 构建新文件的完整路径

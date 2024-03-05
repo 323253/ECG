@@ -386,6 +386,7 @@ def Judge_cust(ecg_signals):
 
 
 
+
 def getData_l(folder_path):
     # 获取文件夹中所有文件
     files = os.listdir(folder_path)
@@ -431,7 +432,7 @@ def getData(folder_path):
         plt.xlabel("Sample")
         plt.ylabel("Amplitude")
         plt.show()
-        return first_row_data
+    return first_row_data
 
 
 

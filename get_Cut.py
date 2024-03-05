@@ -85,38 +85,151 @@ def Judge_cust(ecg_signaltd):
 
 
     return new_ecg_signal
+# 删除子列表中数字个数超过110个的元素
+def Delete_longabnoemal_Data(ecg:list):
+    for ecg_child in ecg:
+        # 找到长度少于1010的数组元素的索引
+        indices_to_remove = [i for i, arr in enumerate(ecg_child) if len(arr) >1053]
 
+        # 使用索引删除元素
+        for index in reversed(indices_to_remove):
+            ecg_child.pop(index)
+        print(len(indices_to_remove),"个心跳周期不具备参考价值 删除")
 
+    return ecg
+#利用正态分布去除长度异常心跳节拍
 def Delete_abnomal_Beat(heartbeatd):
     filtered_nomals=[]
     for heartbeats in heartbeatd:
         # 计算每个元素的长度
         lengths = [len(item) for item in heartbeats]
+        if len(lengths)>0:
+            # 利用标准差与正态分布关系排除异常选择心跳周期
+            mean_length = sum(lengths) / len(lengths)
+            std_dev = (sum((length - mean_length) ** 2 for length in lengths) / len(lengths)) ** 0.5
 
-        # 利用标准差与正态分布关系排除异常选择心跳周期
-        mean_length = sum(lengths) / len(lengths)
-        std_dev = (sum((length - mean_length) ** 2 for length in lengths) / len(lengths)) ** 0.5
+            # 设置一个阈值，如果元素长度与均值的差异大于阈值的倍数，就认为它长度异常
+            threshold = 2.0
 
-        # 设置一个阈值，如果元素长度与均值的差异大于阈值的倍数，就认为它长度异常
-        threshold = 2.0
+            # 找到长度异常的元素的索引
+            outliers = [index for index, length in enumerate(lengths) if abs(length - mean_length) > threshold * std_dev]
 
-        # 找到长度异常的元素的索引
-        outliers = [index for index, length in enumerate(lengths) if abs(length - mean_length) > threshold * std_dev]
-
-        # 从列表中去掉长度异常的元素
-        filtered_nomal = [heartbeats[index] for index in range(len(heartbeats)) if index not in outliers]
-    filtered_nomals.append(filtered_nomal)
+            # 从列表中去掉长度异常的元素
+            filtered_nomal = [heartbeats[index] for index in range(len(heartbeats)) if index not in outliers]
+        filtered_nomals.append(filtered_nomal)
     return filtered_nomals
+#归一化处理
+def normalize_ecg(ecg_datad):
+    #归一化处理
+    # 将数据类型转换为float，以防万一
+    nomal_Datas=[]
+    for ecg_data in ecg_datad:
+        nomal_Data = []
+        for ecg_data0 in ecg_data:
+            ecg_data0=np.array(ecg_data0,dtype=float)
+            # 计算最大值和最小值
+            max_val = np.max(ecg_data0)
+            min_val = np.min(ecg_data0)
 
+            # 归一化处理
+            m=(ecg_data0 - min_val) / (max_val - min_val)
+            m=m.tolist()
+            nomal_Data.append(m)
+        nomal_Datas.append(nomal_Data)
 
+    return nomal_Datas
+#切割出ST段
+def Cut_ST(heartbeatd):
+    After_Cuts=[]
+    lable_STd=[]
+    for heartbeats in heartbeatd:
+        if heartbeats and len(heartbeats[0])>0:
+            Heart_Rate = (7500 / (len(heartbeats[0]))) * 4
+            After_Cut = []
+            lable_STs=[]
+            for heartbeat_periods in heartbeats:
+                # 将列表转换为NumPy数组
+                heartbeat_periods_array = np.array(heartbeat_periods)
+
+                # 寻找波谷和波峰
+                valleys, _ = find_peaks(-heartbeat_periods_array)
+                peaks, _ = find_peaks(heartbeat_periods_array)
+                # # 找到前两个幅值最大的波峰
+                # sorted_peaks_indices = np.argsort(heartbeat_periods_array[peaks])[::-1][:2]
+                # top_peaks_indices = peaks[sorted_peaks_indices]
+                # top_peaks_indices=np.min(top_peaks_indices)#T波
+                if len(valleys) > 0 and len(peaks) > 1:
+                    # 找到第一个波谷作为S点
+                    s_point_index = valleys[0]
+                    J_point_index=s_point_index+25
+                    if Heart_Rate<100:
+                        t_point_index=J_point_index+40
+                    elif 100<=Heart_Rate<110:
+                        t_point_index=J_point_index+36
+                    elif 110<=Heart_Rate<120:
+                        t_point_index=J_point_index+32
+                    elif 120<=Heart_Rate<140:
+                        t_point_index=J_point_index+30
+                    else:
+                        t_point_index=J_point_index+20
+
+                    # 裁切出ST段
+                    st_segment = heartbeat_periods_array[J_point_index:t_point_index]
+                    # Tmp_list=[J_point_index,t_point_index]
+                    # After_Cut_Point.append(Tmp_list)
+                    lable_ST = [1 if J_point_index <= i <= t_point_index else 0 for i in range(len(heartbeat_periods))]
+                    lable_STs.append(lable_ST)
+                    After_Cut.append(st_segment)
+            After_Cuts.append(After_Cut)
+            lable_STd.append(lable_STs)
+        else:
+            After_Cuts.append([])
+            lable_STd.append([])
+    # # 可以打印或进一步处理裁切后的ST段的列表 st_segments
+    # # 绘制心电图
+    # t=np.arange(0,1000,1)
+    # heartbeats[0]
+    # plt.plot(t[:len(heartbeats[0])], heartbeats[0], label='Once-Heart-Beat-Data')
+    #
+    # # 在心电图中标记已知的两点
+    # plt.scatter([After_Cut_Point[0][0], After_Cut_Point[0][1]],
+    #             [heartbeats[0][After_Cut_Point[0][0]], heartbeats[0][After_Cut_Point[0][1]]], color='red')
+    #
+    # # 在两点位置画竖线
+    # plt.axvline(After_Cut_Point[0][0], color='green', linestyle='--', label='J')
+    # plt.axvline(After_Cut_Point[0][1], color='blue', linestyle='--', label='ST-End')
+    # # 设置图例
+    # plt.legend()
+    #
+    # # 显示图形
+    # plt.show()
+    # #print("裁切后的ST段列表:", After_Cut)
+    # plt.plot(After_Cut[0])
+    # plt.title("ECG-After_Cut-ST-Data")
+    # plt.show()
+
+    return After_Cuts,lable_STd
+#新的心跳与ST段储存在新的位置
+def SaveToNewPath(ecg,save_folder_path,origenal_name):
+    # 指定保存文件夹路径
+    #save_folder_path = r"D:\毕设数据\HeartBeats"
+
+    # 循环遍历 ecg 列表
+    for i, sub_list in enumerate(ecg):
+        # 构建新文件的完整路径
+        new_file_name = f'{origenal_name}-{i+1}.mat'  # 以子列表的索引文件
+        new_file_path = os.path.join(save_folder_path,new_file_name)
+        sub_list_array=np.array(sub_list,dtype=object)
+        # 将子列表的数据保存到新的 .mat 文件
+        scipy.io.savemat(new_file_path, {'variable_name': sub_list_array})
 def getData_l(folder_path):
     # 获取文件夹中所有文件
     files = os.listdir(folder_path)
     select_files=[file for file in files if file.endswith("L.mat") and file[:-5].isdigit()]
     # 对文件名按照数字进行排序
     select_files.sort(key=lambda x: int(x[:-5]))
-    if len(select_files)>30:
-        select_files=select_files[:30]
+    if len(select_files)>200:
+        select_files=select_files[:200]
         for file_name in select_files:
             print(file_name)
             file_path=os.path.join(folder_path,file_name)#拼成完整路径
@@ -130,17 +243,21 @@ def getData_l(folder_path):
             print(1)
             Judgecust = Judge_cust(first_row_data)
             QRS_detect = QRS_detect_Blutty(Judgecust, 98)
-            Delete_abnomal = Delete_abnomal_Beat(QRS_detect)
-
-            # file=r"D:\毕设数据\QRSdata"
-            # scipy.io.savemat(file, {'variable_name': QRS_detect[0]})
-            # print('QRS_detect finish')
-
-            #first_row_data = mat_data['filtered_ecg'][0, :]
+            Delete_longabnoemal=Delete_longabnoemal_Data(QRS_detect)
+            normalize_ecgl=normalize_ecg(Delete_longabnoemal)
+            Cut_STD,ST_Lable=Cut_ST(normalize_ecgl)
+            #保存心跳周期
+            # SaveToNewPath(normalize_ecgl,r"D:\毕设数据\HeartBeats",file_name[:-4])
+            # print("A")
+            #保存ST段
+            SaveToNewPath(Cut_STD,r"D:\毕设数据\ST_Select_Data",file_name[:-4])
+            print('B')
+            # SaveToNewPath(ST_Lable, r"D:\毕设数据\ST_Lable", file_name[:-4])
+            # print('C')
         return first_row_data
 
 # 指定文件夹路径
-folder_path_l = r"D:\毕设数据\MyLowData"
+folder_path_l = r"D:\毕设数据\MyLowData2"
 folder_path=r"D:\毕设数据\数据\Train"
 #getData(folder_path)
 getData_l=getData_l(folder_path_l)
