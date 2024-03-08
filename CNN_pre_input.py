@@ -5,6 +5,9 @@ from scipy.io import loadmat
 from sklearn.model_selection import train_test_split
 from tensorflow.keras import layers, models
 import re
+from scipy.io import savemat
+from keras.utils import to_categorical
+#本文件准备数据集和标签
 #获取文件列表
 def get_file_list(folder_path, file_suffix):
     file_list = [file for file in os.listdir(folder_path) if file.endswith(file_suffix)]
@@ -56,20 +59,6 @@ def load_data_from_mat(file_path):
     return  celld # 请替换成实际的数据键名
 
 # Step 4: 构建 CNN 模型
-def CNN_Model(input_shape):
-    model = models.Sequential()
-    model.add(layers.Conv1D(32, kernel_size=3, activation='relu', input_shape=input_shape))
-    model.add(layers.MaxPooling1D(pool_size=2))
-    model.add(layers.Conv1D(32, kernel_size=3, activation='relu'))
-    model.add(layers.MaxPooling1D(pool_size=2))
-    model.add(layers.Conv1D(48, kernel_size=3, activation='relu'))
-    model.add(layers.MaxPooling1D(pool_size=2))
-    model.add(layers.Flatten())
-    model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dense(3, activation='softmax'))  # 3个类别，可以根据实际情况调整
-
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    return model
 
 # Step 5: 获取文件列表
 folder_path = r"D:\毕设数据\ST_Select_Data_New"
@@ -93,17 +82,15 @@ for file_name in file_names:
     # label_data.extend([labels] * sample_count)
 labelss = [label for label, count in zip(labels, sample_counts) for _ in range(count)]
 
-input_data = np.array(input_data)
+
+# input_data = np.array(input_data)
 label_data = np.array(labelss)
-input_data=np.expand_dims(input_data,axis=-1)
-print('input_data,label_data,finish')
-# Step 8: 划分训练集和测试集
-X_train, X_test, y_train, y_test = train_test_split(input_data, label_data, test_size=0.2, random_state=42)
-print("split")
-# Step 9: 构建 CNN 模型
-input_shape = input_data.shape[1:]  # 根据实际情况调整
-model = CNN_Model(input_shape)
-print("CNN_Model finish")
-# Step 10: 训练模型
-model.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test))
-print("train")
+label_data_hot=to_categorical(label_data,num_classes=4)
+# print('输入ST段数量：',len(input_data),'标签数量：',len(label_data))
+# file_path1=r"D:\毕设数据\input_lables\input_data.mat"
+# file_path2=r"D:\毕设数据\input_lables\label_data.mat"
+file_path3=r"D:\毕设数据\input_lables\label_data_hot.mat"
+
+# savemat(file_path1,{'input_data':input_data})
+# savemat(file_path2,{'label_data':label_data})
+savemat(file_path3,{'label_data_hot':label_data_hot})
